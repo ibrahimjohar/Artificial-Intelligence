@@ -3,9 +3,6 @@
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -26,36 +23,23 @@ df = pd.DataFrame(data)
 
 #handle missing vals w/ median imputation for numeric features
 numeric_features = ['square_footage', 'bedrooms', 'bathrooms', 'age']
-numeric_imputer = SimpleImputer(strategy='median')
+df[numeric_features] = df[numeric_features].fillna(df[numeric_features].median())
 
-#encode categorical variable 'neighborhood' with OneHotEncoder
-elect_transformer = OneHotEncoder(drop='first')
+#encode categorical variable 'neighborhood'
+df = pd.get_dummies(df, columns=['neighborhood'], drop_first=True)
 
-#preprocessing steps
-preprocessor = ColumnTransformer(transformers=[
-    ('num', numeric_imputer, numeric_features),
-    ('cat', elect_transformer, ['neighborhood'])
-], remainder='passthrough')
-
-#preparing features and target
+#split features and target
 X = df.drop('price', axis=1)
 y = df['price']
 
-#apply preprocessing
-X_processed = preprocessor.fit_transform(X)
-
-#feature names after encoding
-encoded_cat_names = preprocessor.named_transformers_['cat'].get_feature_names_out(['neighborhood'])
-feature_names = numeric_features + list(encoded_cat_names)
-
 #split into train/test
-X_train, X_test, y_train, y_test = train_test_split(X_processed, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 #train Linear Regression
 model = LinearRegression()
 model.fit(X_train, y_train)
 
-#evaluate
+#evaluate model
 y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
@@ -66,9 +50,9 @@ print(f"root MSE: {rmse:.2f}")
 print(f"r-squared: {r2:.2f}")
 
 #identify feature importances (coefficients)
-coefs = model.coef_
-importance = pd.Series(coefs, index=feature_names).sort_values(key=abs, ascending=False)
-print("\nfeature importance (by absolute coefficient):")
+feature_names = X.columns
+importance = pd.Series(model.coef_, index=feature_names).abs().sort_values(ascending=False)
+print("\nfeature importance (absolute coefficient):")
 print(importance)
 
 #predict a new house price
@@ -77,10 +61,11 @@ new_house = pd.DataFrame({
     'bedrooms': [4],
     'bathrooms': [2.5],
     'age': [6],
-    'neighborhood': ['Downtown']
+    'neighborhood_Suburb': [0],  #one-hot columns
+    'neighborhood_Uptown': [0]
 })
-new_processed = preprocessor.transform(new_house)
-predicted_price = model.predict(new_processed)
+
+predicted_price = model.predict(new_house)
 print(f"\npredicted price for new house: ${predicted_price[0]:,.2f}")
 
 #visualization
@@ -90,4 +75,3 @@ plt.xlabel("actual price")
 plt.ylabel("predicted price")
 plt.title("actual vs predicted house prices")
 plt.show()
-
