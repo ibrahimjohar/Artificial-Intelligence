@@ -20,7 +20,7 @@ data = {
 df = pd.DataFrame(data)
 
 #clean data
-df = df.dropna()  # drop missing
+df = df.dropna()  #drop missing
 for col in ['spend_last6m','age_years','visit_count','purchases_per_month']:
     low, high = df[col].quantile([0.01, 0.99])
     df[col] = df[col].clip(low, high)
