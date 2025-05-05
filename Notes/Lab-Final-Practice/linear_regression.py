@@ -25,3 +25,14 @@ PredictionLR = ModelLR.predict(X_test)
 
 #print predictions
 print("predictions: ", PredictionLR)
+
+
+# Root Mean Squared Error: The Root Mean Squared Error is the square root of the
+# variance of the residuals. It specifies the absolute fit of the model to the data i.e. how
+# close the observed data points are to the predicted values.
+
+from sklearn.metrics import r2_score
+print('===================LR Testing Accuracy================')
+teachLR = r2_score(y_test, PredictionLR)
+testingAccLR = teachLR * 100
+print(testingAccLR)
