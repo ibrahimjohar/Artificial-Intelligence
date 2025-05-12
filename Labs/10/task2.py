@@ -42,7 +42,7 @@ def plot_clusters(X, labels, x_col, y_col, title, cmap=None):
     plt.show()
 
 def prepare_features(df, scale_cols, leave_cols):
-    """Scale only scale_cols; leave leave_cols untouched."""
+    """scale only scale_cols; leave leave_cols untouched."""
     scaler = StandardScaler()
     scaled = scaler.fit_transform(df[scale_cols])
     df_scaled = pd.DataFrame(scaled, columns=scale_cols, index=df.index)
